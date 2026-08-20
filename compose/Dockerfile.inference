@@ -1,0 +1,8 @@
+FROM vllm/vllm-openai:v0.27.1
+WORKDIR /app
+RUN pip install --no-cache-dir "cryptography==46.0.3" "fastapi==0.136.3" "httpx==0.28.1" "uvicorn==0.52.4"
+COPY l1_demo /app/l1_demo
+COPY model-encryption /app/model_encryption
+COPY inference /app/inference
+ENTRYPOINT []
+CMD ["uvicorn", "inference.gate:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,45 @@
+name: cc-vllm-l1
+services:
+  mock-attestation:
+    build:
+      context: ..
+      dockerfile: compose/Dockerfile.service
+    command: ["uvicorn", "app:app", "--app-dir", "/app/mock-attestation", "--host", "0.0.0.0", "--port", "8080"]
+    volumes:
+      - ../secrets/mock-signing.key:/run/secrets/mock-signing.key:ro
+    networks: [control]
+
+  key-broker:
+    build:
+      context: ..
+      dockerfile: compose/Dockerfile.service
+    command: ["uvicorn", "app:app", "--app-dir", "/app/key-broker", "--host", "0.0.0.0", "--port", "8080"]
+    volumes:
+      - ../secrets/mock-signing.key:/run/secrets/mock-signing.key:ro
+      - ../secrets/demo-dek.hex:/run/secrets/demo-dek.hex:ro
+      - ../config/policy.json:/app/config/policy.json:ro
+    networks: [control]
+
+  inference:
+    build:
+      context: ..
+      dockerfile: compose/Dockerfile.inference
+    env_file: ../.env
+    environment:
+      KEY_BROKER_URL: http://key-broker:8080
+      MOCK_ATTESTATION_URL: http://mock-attestation:8080
+      MODEL_CIPHERTEXT: /models/model.tar.gcm
+      MODEL_METADATA: /models/model.tar.gcm.json
+    volumes:
+      - ../encrypted-models:/models:ro
+    tmpfs:
+      - /run/model:rw,noexec,nosuid,nodev,size=20g,mode=0700
+    gpus: all
+    depends_on: [mock-attestation, key-broker]
+    ports:
+      - "${DEMO_PORT:-8000}:8000"
+    networks: [control]
+
+networks:
+  control:
+    internal: true

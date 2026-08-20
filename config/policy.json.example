@@ -1,0 +1,7 @@
+{
+  "environment": "demo-mock",
+  "image_digest": "replace-with-resolved-image-digest",
+  "inference_config_sha256": "replace-with-sha256-of-VLLM_ARGS",
+  "model_ciphertext_sha256": "replace-after-encryption",
+  "policy_version": "l1-demo-v1"
+}
